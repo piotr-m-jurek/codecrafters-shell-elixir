@@ -28,7 +28,7 @@ defmodule CLI do
   def handle("cd " <> dir) do
     case File.cd(dir) do
       :ok -> nil
-      {:err, _} -> "cd: #{dir}: No such file or directory"
+      {:error, _} -> "cd: #{dir}: No such file or directory"
     end
   end
 

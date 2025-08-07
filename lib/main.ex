@@ -30,6 +30,20 @@ defmodule CLI do
           exit(:normal)
 
         c ->
+          [command | args] = c |> String.split(" ")
+
+          case System.find_executable(command) do
+            nil ->
+              "#{c}: command not found"
+
+            path ->
+              {outcome, _exit_code} =
+                System.cmd(path, args, stderr_to_stdout: true, arg0: command)
+
+              outcome
+          end
+
+        c ->
           "#{c}: command not found"
       end
 

@@ -1,5 +1,5 @@
 defmodule CLI do
-  @available_commands ["echo", "exit", "type", "pwd"]
+  @available_commands ["echo", "exit", "type", "pwd", "cwd"]
 
   def main(_) do
     # Uncomment this block to pass the first stage
@@ -9,17 +9,17 @@ defmodule CLI do
   end
 
   defp loop() do
-    msg =
-      IO.gets("$ ")
-      |> String.trim()
-      |> handle()
+    case IO.gets("$ ") |> String.trim() |> handle() do
+      nil ->
+        loop()
 
-    IO.write("#{msg}\n")
-
-    loop()
+      msg ->
+        IO.write("#{msg}\n")
+        loop()
+    end
   end
 
-  @spec handle(String.t()) :: String.t()
+  @spec handle(String.t()) :: String.t() | nil | no_return()
   def handle("echo " <> echo), do: "#{echo}"
   def handle("exit 0"), do: exit(:normal)
   def handle("type " <> command) when command in @available_commands, do: "#{type(command)}"
@@ -61,5 +61,6 @@ defmodule CLI do
   defp type("exit"), do: "exit is a shell builtin"
   defp type("type"), do: "type is a shell builtin"
   defp type("pwd"), do: "pwd is a shell builtin"
+  defp type("cwd"), do: "cwd is a shell builtin"
   defp type(c), do: "#{c}: not found"
 end

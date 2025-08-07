@@ -1,10 +1,14 @@
 defmodule CLI do
   def main(_args) do
     # Uncomment this block to pass the first stage
-    command = IO.gets("$ ") |> String.replace("\n", "")
+    loop()
+  end
 
-    case command do
+  defp loop() do
+    case IO.gets("$ ") |> String.replace("\n", "") do
       c -> IO.write("#{c}: command not found\n")
     end
+
+    loop()
   end
 end

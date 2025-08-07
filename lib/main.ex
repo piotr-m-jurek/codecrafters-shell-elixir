@@ -1,23 +1,39 @@
 defmodule CLI do
-  def main(_args) do
+  @available_commands ["echo", "exit", "type"]
+
+  def main(_) do
     # Uncomment this block to pass the first stage
+    # System.get_env("PATH") |> String.split(":") |> IO.inspect(label: "ENV: ")
+
     loop()
   end
 
   defp loop() do
-    case IO.gets("$ ") |> String.trim() do
-      "type " <> command ->
-        "#{type(command)}\n" |> IO.write()
+    msg =
+      case IO.gets("$ ") |> String.trim() do
+        "type " <> command when command in @available_commands ->
+          "#{type(command)}"
 
-      "echo " <> echo ->
-        IO.write("#{echo}\n")
+        "type " <> command ->
+          case System.find_executable(command) do
+            nil ->
+              "#{command}: not found"
 
-      "exit " <> _code ->
-        exit(:normal)
+            path ->
+              "#{command} is #{String.trim(path)}"
+          end
 
-      c ->
-        IO.write("#{c}: command not found\n")
-    end
+        "echo " <> echo ->
+          "#{echo}"
+
+        "exit " <> _code ->
+          exit(:normal)
+
+        c ->
+          "#{c}: command not found"
+      end
+
+    IO.write("#{msg}\n")
 
     loop()
   end

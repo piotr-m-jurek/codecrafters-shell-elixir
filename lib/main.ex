@@ -25,6 +25,11 @@ defmodule CLI do
   def handle("type " <> command) when command in @available_commands, do: "#{type(command)}"
   def handle("pwd"), do: File.cwd!()
 
+  def handle("cd ~") do
+    home = System.get_env("HOME")
+    handle("cd #{home}")
+  end
+
   def handle("cd " <> dir) do
     case File.cd(dir) do
       :ok -> nil

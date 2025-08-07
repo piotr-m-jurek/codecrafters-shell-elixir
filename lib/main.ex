@@ -25,6 +25,13 @@ defmodule CLI do
   def handle("type " <> command) when command in @available_commands, do: "#{type(command)}"
   def handle("pwd"), do: File.cwd!()
 
+  def handle("cd " <> dir) do
+    case File.cd(dir) do
+      :ok -> nil
+      {:err, _} -> "cd: #{dir}: No such file or directory"
+    end
+  end
+
   def handle("type " <> command) do
     case System.find_executable(command) do
       nil ->

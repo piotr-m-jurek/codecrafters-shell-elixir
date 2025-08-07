@@ -40,15 +40,11 @@ defmodule CLI do
               {outcome, _exit_code} =
                 System.cmd(path, args, stderr_to_stdout: true, arg0: command)
 
-              outcome
+              String.trim(outcome)
           end
-
-        c ->
-          "#{c}: command not found"
       end
 
     IO.write("#{msg}\n")
-
     loop()
   end
 

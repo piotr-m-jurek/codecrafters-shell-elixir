@@ -6,7 +6,10 @@ defmodule CLI do
 
   defp loop() do
     case IO.gets("$ ") |> String.trim() do
-      "exit" <> _code ->
+      "echo " <> echo ->
+        IO.write("#{echo}\n")
+
+      "exit " <> _code ->
         exit(:normal)
 
       c ->

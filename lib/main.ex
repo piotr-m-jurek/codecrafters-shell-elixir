@@ -6,6 +6,9 @@ defmodule CLI do
 
   defp loop() do
     case IO.gets("$ ") |> String.trim() do
+      "type " <> command ->
+        "#{type(command)}\n" |> IO.write()
+
       "echo " <> echo ->
         IO.write("#{echo}\n")
 
@@ -18,4 +21,9 @@ defmodule CLI do
 
     loop()
   end
+
+  defp type("echo"), do: "echo is a shell builtin"
+  defp type("exit"), do: "exit is a shell builtin"
+  defp type("type"), do: "type is a shell builtin"
+  defp type(c), do: "#{c}: not found"
 end

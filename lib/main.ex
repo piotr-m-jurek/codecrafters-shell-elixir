@@ -5,8 +5,12 @@ defmodule CLI do
   end
 
   defp loop() do
-    case IO.gets("$ ") |> String.replace("\n", "") do
-      c -> IO.write("#{c}: command not found\n")
+    case IO.gets("$ ") |> String.trim() do
+      "exit" <> _code ->
+        exit(:normal)
+
+      c ->
+        IO.write("#{c}: command not found\n")
     end
 
     loop()

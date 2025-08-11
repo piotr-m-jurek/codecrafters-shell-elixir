@@ -68,8 +68,8 @@ defmodule CLI do
     end
   end
 
-  @type state :: :single_quote | :no_quote
   defmodule Tokenizer do
+    @type state :: :single_quote | :no_quote | :double_quote
     alias CLI.Tokenizer
 
     def tokenize(<<>>, tokens, current, _) do
@@ -81,6 +81,14 @@ defmodule CLI do
     end
 
     def tokenize(<<"'", rest::binary>>, tokens, current, :single_quote) do
+      tokenize(rest, tokens, current, :no_quote)
+    end
+
+    def tokenize(<<"\"", rest::binary>>, tokens, current, :no_quote) do
+      tokenize(rest, tokens, current, :double_quote)
+    end
+
+    def tokenize(<<"\"", rest::binary>>, tokens, current, :double_quote) do
       tokenize(rest, tokens, current, :no_quote)
     end
 

@@ -1,15 +1,13 @@
 defmodule CLI do
+  alias CLI.Tokenizer
   @available_commands ["echo", "exit", "type", "pwd", "cwd"]
 
   def main(_) do
-    # Uncomment this block to pass the first stage
-    # System.get_env("PATH") |> String.split(":") |> IO.inspect(label: "ENV: ")
-
     loop()
   end
 
-  defp loop() do
-    case IO.gets("$ ") |> String.trim() |> handle() do
+  def loop() do
+    case IO.gets("$ ") |> String.trim() |> cmd() do
       nil ->
         loop()
 
@@ -19,25 +17,33 @@ defmodule CLI do
     end
   end
 
-  @spec handle(String.t()) :: String.t() | nil | no_return()
-  def handle("echo " <> echo), do: "#{echo}"
-  def handle("exit 0"), do: exit(:normal)
-  def handle("type " <> command) when command in @available_commands, do: "#{type(command)}"
-  def handle("pwd"), do: File.cwd!()
+  def type(c) when c in @available_commands, do: "#{c} is a shell builtin"
+  def type(c), do: "#{c}: not found"
 
-  def handle("cd ~") do
+  @spec cmd(raw_command :: String.t()) :: String.t() | nil | no_return()
+  def cmd("echo " <> echo),
+    do: echo |> Tokenizer.tokenize([], "", :no_quote) |> Enum.join(" ")
+
+  def cmd("exit 0"), do: exit(:normal)
+
+  def cmd("pwd"), do: File.cwd!()
+
+  def cmd("cd ~") do
     home = System.get_env("HOME")
-    handle("cd #{home}")
+    cmd("cd #{home}")
   end
 
-  def handle("cd " <> dir) do
+  def cmd("cd " <> dir) do
     case File.cd(dir) do
       :ok -> nil
       {:error, _} -> "cd: #{dir}: No such file or directory"
     end
   end
 
-  def handle("type " <> command) do
+  def cmd("type " <> command) when command in @available_commands,
+    do: "#{command} is a shell builtin"
+
+  def cmd("type " <> command) do
     case System.find_executable(command) do
       nil ->
         "#{command}: not found"
@@ -47,12 +53,12 @@ defmodule CLI do
     end
   end
 
-  def handle(c) do
-    [command | args] = c |> String.trim() |> String.split(" ") |> Enum.map(&String.trim(&1))
+  def cmd(command) do
+    [command | args] = Tokenizer.tokenize(command, [], "", :no_quote)
 
     case System.find_executable(command) do
       nil ->
-        "#{c}: command not found"
+        "#{command}: command not found"
 
       path ->
         {outcome, _exit_code} =
@@ -62,10 +68,28 @@ defmodule CLI do
     end
   end
 
-  defp type("echo"), do: "echo is a shell builtin"
-  defp type("exit"), do: "exit is a shell builtin"
-  defp type("type"), do: "type is a shell builtin"
-  defp type("pwd"), do: "pwd is a shell builtin"
-  defp type("cwd"), do: "cwd is a shell builtin"
-  defp type(c), do: "#{c}: not found"
+  @type state :: :single_quote | :no_quote
+  defmodule Tokenizer do
+    alias CLI.Tokenizer
+
+    def tokenize(<<>>, tokens, current, _) do
+      Enum.reverse([current | tokens]) |> Enum.reject(&(&1 == ""))
+    end
+
+    def tokenize(<<"'", rest::binary>>, tokens, current, :no_quote) do
+      tokenize(rest, tokens, current, :single_quote)
+    end
+
+    def tokenize(<<"'", rest::binary>>, tokens, current, :single_quote) do
+      tokenize(rest, tokens, current, :no_quote)
+    end
+
+    def tokenize(<<" ", rest::binary>>, tokens, current, :no_quote) do
+      tokenize(rest, [current | tokens], "", :no_quote)
+    end
+
+    def tokenize(<<ch, rest::binary>>, tokens, current, state) do
+      tokenize(rest, tokens, current <> <<ch>>, state)
+    end
+  end
 end

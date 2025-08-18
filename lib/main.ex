@@ -1,5 +1,4 @@
 defmodule CLI do
-  alias CLI.Tokenizer
   @available_commands ["echo", "exit", "type", "pwd", "cwd"]
 
   def main(_) do
@@ -16,9 +15,6 @@ defmodule CLI do
         loop()
     end
   end
-
-  def type(c) when c in @available_commands, do: "#{c} is a shell builtin"
-  def type(c), do: "#{c}: not found"
 
   @spec cmd(raw_command :: String.t()) :: String.t() | nil | no_return()
   def cmd("echo " <> echo),
@@ -65,39 +61,6 @@ defmodule CLI do
           System.cmd(path, args, stderr_to_stdout: true, arg0: command)
 
         String.trim(outcome)
-    end
-  end
-
-  defmodule Tokenizer do
-    @type state :: :single_quote | :no_quote | :double_quote
-    alias CLI.Tokenizer
-
-    def tokenize(<<>>, tokens, current, _) do
-      Enum.reverse([current | tokens]) |> Enum.reject(&(&1 == ""))
-    end
-
-    def tokenize(<<"'", rest::binary>>, tokens, current, :no_quote) do
-      tokenize(rest, tokens, current, :single_quote)
-    end
-
-    def tokenize(<<"'", rest::binary>>, tokens, current, :single_quote) do
-      tokenize(rest, tokens, current, :no_quote)
-    end
-
-    def tokenize(<<"\"", rest::binary>>, tokens, current, :no_quote) do
-      tokenize(rest, tokens, current, :double_quote)
-    end
-
-    def tokenize(<<"\"", rest::binary>>, tokens, current, :double_quote) do
-      tokenize(rest, tokens, current, :no_quote)
-    end
-
-    def tokenize(<<" ", rest::binary>>, tokens, current, :no_quote) do
-      tokenize(rest, [current | tokens], "", :no_quote)
-    end
-
-    def tokenize(<<ch, rest::binary>>, tokens, current, state) do
-      tokenize(rest, tokens, current <> <<ch>>, state)
     end
   end
 end
